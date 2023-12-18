@@ -183,7 +183,7 @@ public class ParseTree {
     /**
      * Writes the tree as a LaTeX document which can be compiled using LuaLaTeX.
      * 
-     * This is an alias of {@link toLaTeXusingForest() toLaTeXusingForest}.
+     * This is an alias of {@link () toLaTeXusingForest}.
      * <br>
      * <br>
      * The result can be used with the command:
@@ -196,5 +196,391 @@ public class ParseTree {
      */
     public String toLaTeX() {
         return this.toLaTeXusingForest();
+    }
+
+    private static final StringBuilder codeToOut = new StringBuilder(); // contain the LLVM AS code to print out
+    private static Integer varCounter = 0; // count the number of variable %1, %2 ...
+    private static final ArrayList<String> varStored = new ArrayList<>();  // store variable introduced by user
+    private static Integer ifCounter = 0; // if1, if2 ...
+    private static Integer whileCounter = 0;
+    private static boolean read = false;
+    private static boolean print = false;
+
+    public void program() {
+        System.out.println("Program1");
+        // [1] <Program>  ->  begin <Code> end
+        codeToOut.append("define i32 @main() {\n");
+        children.get(1).code();
+        codeToOut.append("ret i32 0\n}\n");
+
+        if (read) {codeToOut.append(get_print());}
+        if (print) {codeToOut.append(get_read());}
+        System.out.println("Program2");
+    }
+
+    public void code() {
+        // [2] <Code>  ->  <InstList>
+        // [3] <Code>  ->  EPSILON
+        System.out.println("Code1");
+
+        // if it has a child, it is not EPSILON so we call instList
+        if (children.get(0).label.isNonTerminal()) {
+            children.get(0).instructionList();
+        }
+        System.out.println("Code2");
+    }
+
+    public void instructionList() {
+        // [4] <InstList>  ->  <Instruction><InstListTail>
+        System.out.println("InstructionList1");
+
+        // call instruction
+        if (children.get(0).label.isNonTerminal()) {
+            children.get(0).instruction();
+        }
+
+        // call instructionListTail
+        if (children.get(1).label.isNonTerminal()) {
+            children.get(1).instructionListTail();
+        }
+        System.out.println("InstructionList");
+    }
+
+    public void instructionListTail() {
+        // [5] <InstListTail>  ->  ...<Instruction><InstListTail>
+        // [6] <InstListTail>  ->  EPSILON
+        System.out.println("InstructionListTail1");
+
+        // if it has a child, it is not EPSILON so we call Instruction
+        if (children.get(1).label.isNonTerminal()) {
+            children.get(1).instruction();
+        }
+
+        // if it has a child, it is not EPSILON so we call instructionListTail (treat the next instruction)
+        if (children.get(2).label.isNonTerminal()) {
+            children.get(2).instructionListTail();
+        }
+
+        System.out.println("InstructionListTail");
+    }
+
+    public void instruction() {
+        // [7] <Instruction>  ->  <Assign>
+        // [8] <Instruction>  ->  <If>
+        // [9] <Instruction>  ->  <While>
+        // [10] <Instruction>  ->  <Print>
+        // [11] <Instruction>  ->  <Read>
+        // [12] <Instruction>  ->  begin <InstList> end
+
+        System.out.println("Instruction1");
+
+        if (children.get(0).label.isNonTerminal()) {
+            switch (children.get(0).label.getNonTerminal()) {
+                case Assign -> children.get(0).assignExpr();
+                case If -> children.get(0).ifExpr();
+                case While -> children.get(0).whileExpr();
+                case Print -> children.get(0).printExpr();
+                case Read -> children.get(0).readExpr();
+            }
+        }
+        // call instructionList
+        if (children.get(1).label.isNonTerminal()) {
+            children.get(1).instructionList();
+        }
+        System.out.println("Instruction");
+    }
+
+    public void assignExpr() {
+        // [13] <Assign>  ->  [Varname] := <ExprArith>
+
+        System.out.println("Assign1");
+
+        String code;
+        if (!varStored.contains(children.get(0).label.getValue())) {
+            // if the variable is not stored yet
+            // Memory allocation of current variable
+            code = "  %" + children.get(0).label.getValue() + "= alloca i32\n";
+            codeToOut.append(code);
+            varStored.add(children.get(0).label.getValue().toString());
+        }
+        children.get(2).exprArith();
+        code = "  store i32 %" + varCounter + ", i32* %" + children.get(0).label.getValue() + "\n";
+        codeToOut.append(code);
+
+        System.out.println("Assign");
+    }
+
+    public void exprArith() {
+
+        System.out.println("ExprArith1");
+        // [14] <ExprArith>  ->  <Prod> <ExprArith'>
+        children.get(0).prod();
+        children.get(1).exprArithPrime();
+
+        System.out.println("ExprArith");
+    }
+
+    public void exprArithPrime() {
+        System.out.println("ExprArithPrime1");
+        // [15] <ExprArith'>  ->  + <Prod> <ExprArith'>
+        // [16] <ExprArith'>  ->  - <Prod> <ExprArith'>
+        // [17] <ExprArith'>  ->  EPSILON
+
+        // if it has a child, it is not EPSILON so we call Prod
+        if (children.get(1).label.isNonTerminal()) {
+            children.get(1).prod();
+        }
+        // if it has a child, it is not EPSILON so we call exprArithPrime (treat the next Prod)
+        if (children.get(2).label.isNonTerminal()) {
+            children.get(2).exprArithPrime();
+        }
+
+        System.out.println("ExprArithPrime");
+    }
+
+    public void prod() {
+        System.out.println("Prod1");
+        // [18] <Prod>  ->  <Atom> <Prod'>
+        children.get(0).atom();
+        children.get(1).prodPrime();
+
+        System.out.println("Prod");
+    }
+
+    public void prodPrime() {
+        System.out.println("ProdPrime1");
+        // [19] <Prod'>  ->  * <Atom> <Prod'>
+        // [20] <Prod'>  ->  / <Atom> <Prod'>
+        // [21] <Prod'>  ->  EPSILON
+
+        // if it has a child, it is not EPSILON so we call Atom
+        if (children.get(1).label.isNonTerminal()) {
+            children.get(1).atom();
+        }
+        // if it has a child, it is not EPSILON so we call prodPrime (treat the next Atom)
+        if (children.get(2).label.isNonTerminal()) {
+            children.get(2).prodPrime();
+        }
+
+        System.out.println("ProdPrime");
+    }
+
+    public void atom() {
+        // [22] <Atom>  ->  - <Atom>
+        // [23] <Atom>  ->  ( <ExprArith> )
+        // [24] <Atom>  ->  [Varname]
+        // [25] <Atom>  ->  [Number]
+
+        System.out.println("Atom1");
+
+        LexicalUnit lu = children.get(0).label.getTerminal();
+        switch (lu) {
+            case NUMBER -> {
+                String nextVar = "%" + ++varCounter;
+                String code = "  " + nextVar + "= add i32 0 , " + children.get(0).label.getValue() + "\n";
+                codeToOut.append(code);
+            }
+            case MINUS -> {
+                children.get(1).atom();
+                String currentVar = "%" + varCounter;
+                String nextVar = "%" + ++varCounter;
+                String code = "  " + nextVar +"= mul i32 " + " -1" + " , " + currentVar + "\n";
+                codeToOut.append(code);
+            }
+            case VARNAME -> {
+                String code = "  " + "%" + ++varCounter + "= load i32, i32* " + "%" + children.get(0).label.getValue() + "\n";
+                codeToOut.append(code);
+            }
+            case LPAREN -> children.get(1).exprArith();
+        }
+
+        System.out.println("Atom");
+    }
+
+    public void ifExpr() {
+        System.out.println("If1");
+        // [26] <If>  -> if <Cond> then <Instruction> else <IfTail>
+        children.get(1).cond();
+        String code = "  br i1 %" + varCounter + ", label %if" + ifCounter; // conditional jump to if or else
+        if (children.get(3).label.isNonTerminal()) {
+            code += ", label %Else" + ifCounter + "\n";
+        } else {
+            code += ", label %EndIf" + ifCounter + "\n";
+        }
+
+        code += "if" + ifCounter + ":\n";
+        codeToOut.append(code);
+        children.get(3).instruction();
+        code = "  br label %EndIf" + ifCounter + "\n";
+
+        if (children.get(5).label.isNonTerminal()) { // if there is an else statement
+            code += "Else" + ifCounter + ":\n";
+            codeToOut.append(code);
+            children.get(5).ifTail();
+            code = "  br label %EndIf" + ifCounter + "\n";
+        }
+
+        code += "EndIf" + ifCounter + ":\n";
+        codeToOut.append(code);
+        ifCounter++;
+
+        System.out.println("If");
+    }
+
+    public void ifTail() {
+        System.out.println("IfTail1");
+        // [27] <IfTail>  ->  <Instruction>
+        // [28] <IfTail>  ->  EPSILON
+        if (children.get(0).label.isNonTerminal()) {
+            children.get(0).instruction();
+        }
+        System.out.println("IfTail");
+    }
+
+    public void cond() {
+        // [29] <Cond>  ->  <Conj> <Cond'>
+        children.get(0).conj();
+        children.get(1).condPrime();
+
+        System.out.println("Cond");
+    }
+
+    public void condPrime() {
+        System.out.println("CondPrime1");
+        // [30] <Cond'>  ->  or <Conj> <Cond'>
+        // [31] <Cond'>  ->  EPSILON
+        if (children.get(1).label.isNonTerminal()) {
+            children.get(1).conj();
+        }
+        if (children.get(2).label.isNonTerminal()) {
+            children.get(2).condPrime();
+        }
+
+        System.out.println("CondPrime");
+    }
+
+    public void conj() {
+        System.out.println("Conj1");
+        // [32] <Conj>  ->  <SimpleCond> <Conj'>
+        children.get(0).simpleCond();
+        children.get(1).conjPrime();
+
+        System.out.println("Conj");
+    }
+
+    public void conjPrime() {
+        System.out.println("ConjPrime1");
+        // [33] <Conj'>  ->  and <SimpleCond> <Conj'>
+        // [34] <Conj'>  ->  EPSILON
+        if (children.get(1).label.isNonTerminal()) {
+            children.get(1).simpleCond();
+        }
+        if (children.get(2).label.isNonTerminal()) {
+            children.get(2).conjPrime();
+        }
+
+        System.out.println("ConjPrime");
+    }
+
+    public void simpleCond() {
+        System.out.println("SimpleCond1");
+        // [35] <SimpleCond>  ->  {<Cond>}
+        // [36] <SimpleCond>  ->  <ExprArith> <Comp> <ExprArith>
+
+        if (children.get(0).label.isNonTerminal()) { // if it is a ExprArith
+            children.get(0).exprArith();
+            children.get(1).compOp();
+            children.get(2).exprArith();
+        }
+        if (children.get(1).label.isNonTerminal()) { // if it is a Cond
+            children.get(1).cond();
+        }
+
+        System.out.println("SimpleCond");
+    }
+
+    public String compOp() {
+        // [37] <Comp>  ->  =
+        // [38] <Comp>  ->  <
+        System.out.println("Comp");
+        return switch (children.get(0).label.getTerminal()) {
+            case EQUAL -> "eq";
+            case SMALLER -> "slt";
+            default -> null;
+        };
+
+    }
+
+    public void whileExpr() {
+        System.out.println("While1");
+        // [39] <While>  ->  while <Cond> do <Instruction>
+        String code = "While" + whileCounter + ":\n";
+        codeToOut.append(code);
+        children.get(1).cond();
+        code = "  br i1 %" + varCounter + ", label %WhileBody" + whileCounter + ", label %EndWhile" + whileCounter + "\n";
+        code += "WhileBody" + whileCounter + ":\n";
+        codeToOut.append(code);
+        children.get(3).instruction();
+        code = "  br label %While" + whileCounter + "\n";
+        code += "EndWhile" + whileCounter + ":\n";
+        codeToOut.append(code);
+        whileCounter++;
+
+        System.out.println("While");
+    }
+
+    public void printExpr() {
+        System.out.println("Print1");
+        // [40] <Print>  ->  print([VarName])
+        String code = "  " + "%" + ++varCounter + "= load i32, i32* %" + children.get(2).label.getValue().toString() + "\n"
+                + "  call void @println(i32 " + "%" + varCounter + ")\n";
+        codeToOut.append(code);
+        print = true;
+
+        System.out.println("Print");
+    }
+
+    public void readExpr() {
+        System.out.println("Read1");
+        String code;
+        if (!varStored.contains(children.get(2).label.getValue())){
+            code = "  %" + children.get(2).label.getValue() + "= alloca i32\n";
+            codeToOut.append(code);
+            varStored.add(children.get(2).label.getValue().toString());
+        }
+        code = "  " + "%" + ++varCounter + "= call i32 @readInt()\n" +
+                "  store i32 " + "%" + varCounter + ", i32* %" + children.get(2).label.getValue() + "\n";
+        codeToOut.append(code);
+        read = true;
+
+        System.out.println("Read");
+    }
+
+    private static String get_print(){
+        return """
+                @.strP= private unnamed_addr constant [4 x i8] c"%d\\0A\\00", align 1
+                define void @println(i32 %var) {
+                  %1= call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.strP, i32 0, i32 0), i32 %var)
+                  ret void
+                }
+                declare i32 @printf(i8*, ...)
+                """;
+    }
+
+    private static String get_read(){
+        return """
+                @.strR= private unnamed_addr constant [3 x i8] c"%d\\00", align 1
+                define i32 @readInt() {
+                  %var= alloca i32, align 4
+                  %1= call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.strR, i32 0, i32 0), i32* %var)
+                  %2= load i32, i32* %var, align 4
+                  ret i32 %2
+                }
+                declare i32 @__isoc99_scanf(i8*, ...)
+                """;
+    }
+
+    public StringBuilder getCodeToOut() {
+        return codeToOut;
     }
 }

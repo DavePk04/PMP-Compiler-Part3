@@ -121,10 +121,10 @@
 	}
 	
     /**
-     * Returns the value of the symbol.
-     * 
-     * @return the value of attribute {@link value value}.
-     */
+	 * Returns the value of the symbol.
+	 *
+	 * @return the value of attribute {@link value value}.
+	 */
 	public Object getValue(){
 		return this.value;
 	}
@@ -197,5 +197,13 @@
 			return value;
         }
 		//return "UNREACHABLE RETURN";
+	}
+
+	public NonTerminal getNonTerminal(){
+		return (NonTerminal) this.value;
+	}
+
+	public LexicalUnit getTerminal() {
+		return (LexicalUnit) this.value;
 	}
 }

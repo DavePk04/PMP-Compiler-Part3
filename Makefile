@@ -8,14 +8,14 @@ build: jflex
 	javac -d more -cp src/ src/Main.java
 	jar cfe dist/part2.jar Main -C more .
 testing:
-	#java -jar dist/part2.jar -wt outputs/AssignParseTree.tex tests/01-Assign.pmp
-	java -jar dist/part2.jar -wt outputs/EuclidParseTree.tex tests/02-euclid.pmp
+#	java -jar dist/part2.jar -wt outputs/AssignParseTree.tex tests/01-Assign.pmp											# OK
+#	java -jar dist/part2.jar -wt outputs/EuclidParseTree.tex tests/02-euclid.pmp
 #	java -jar dist/part2.jar -wt outputs/IfThen1ParseTree.tex tests/02-IfThen1.pmp
-#	java -jar dist/part2.jar -wt outputs/IfThen2ParseTree.tex tests/02-IfThen2.pmp
-#	java -jar dist/part2.jar -wt outputs/IfThenElseParseTree.tex tests/02-IfThenElse.pmp
+#	java -jar dist/part2.jar -wt outputs/IfThen2ParseTree.tex tests/02-IfThen2.pmp											# OK
+#	java -jar dist/part2.jar -wt outputs/IfThenElseParseTree.tex tests/02-IfThenElse.pmp									# OK
 #	java -jar dist/part2.jar -wt outputs/IfThenWrongParseTree.tex tests/02-IfThenWrong.pmp
-#	java -jar dist/part2.jar -wt outputs/WhileParseTree.tex tests/03-While.pmp
-#	java -jar dist/part2.jar -wt outputs/WhileMultipleParseTree.tex tests/03-WhileMultiple.pmp
+#	java -jar dist/part2.jar -wt outputs/WhileParseTree.tex tests/03-While.pmp												# OK
+#	java -jar dist/part2.jar -wt outputs/WhileMultipleParseTree.tex tests/03-WhileMultiple.pmp								# OK
 #	java -jar dist/part2.jar -wt outputs/WhileWrongParseTree.tex tests/03-WhileWrong.pmp
 #	java -jar dist/part2.jar -wt outputs/PrintReadParseTree.tex tests/04-PrintRead.pmp
 #	java -jar dist/part2.jar -wt outputs/BeginEndParseTree.tex tests/05-BeginEnd.pmp

@@ -567,8 +567,8 @@ public class ParseTree {
             children.get(1).cond();
         } else {
             children.get(0).exprArith();
-            String leftVar = "%" + (varCounter-1);
-            String rightVar = "%" + varCounter;
+            String leftVar = "%" + varCounter;
+            String rightVar = "%" + (varCounter+1);
             String comp = children.get(1).compOp();
             children.get(2).exprArith();
             String code = "  %" + ++varCounter + "= icmp " + comp + " i32 " + leftVar + ", " + rightVar + "\n";
@@ -596,27 +596,28 @@ public class ParseTree {
         System.out.println("While1");
         System.out.println("whileLabel: " + this.label);
 
+        int currentWhileCounter = whileCounter++; // Utiliser une variable locale pour cette boucle while spécifique
+
         // Début de la boucle while
-        String code = "While" + whileCounter + ":\n";
+        String code = "While" + currentWhileCounter + ":\n";
         codeToOut.append(code);
 
         // Générer la condition de la boucle
         children.get(1).cond();
-        code = "  br i1 %" + (varCounter - 1) + ", label %WhileBody" + whileCounter + ", label %EndWhile" + whileCounter + "\n"; // -1 car cond() incrémente varCounter
+        code = "  br i1 %" + varCounter + ", label %WhileBody" + currentWhileCounter + ", label %EndWhile" + currentWhileCounter + "\n";
         codeToOut.append(code);
 
         // Corps de la boucle
-        code = "WhileBody" + whileCounter + ":\n";
+        code = "WhileBody" + currentWhileCounter + ":\n";
         codeToOut.append(code);
         children.get(3).instruction();
-        code = "  br label %While" + whileCounter + "\n"; // Sauter à l'étiquette de début de la boucle
+        code = "  br label %While" + currentWhileCounter + "\n";
         codeToOut.append(code);
 
         // Fin de la boucle
-        code = "EndWhile" + whileCounter + ":\n";
+        code = "EndWhile" + currentWhileCounter + ":\n";
         codeToOut.append(code);
 
-        whileCounter++;
         System.out.println("While");
     }
 

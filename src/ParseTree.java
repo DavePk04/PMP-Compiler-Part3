@@ -81,6 +81,7 @@ public class ParseTree {
     public ParseTree(NonTerminal lbl, List<ParseTree> chdn) {
         this.label = new Symbol(null,lbl);
         this.children = chdn;
+//        System.out.println("ParseTreeLabel: "+this.label +"\n");
     }
 
     /* Pure LaTeX version (using the forest package) */
@@ -208,6 +209,8 @@ public class ParseTree {
 
     public void program() {
         System.out.println("Program1");
+        System.out.println(children);
+        System.out.println("programLabel: "+this.label);
         // [1] <Program>  ->  begin <Code> end
         codeToOut.append("define i32 @main() {\n");
         children.get(1).code();
@@ -222,6 +225,10 @@ public class ParseTree {
         // [2] <Code>  ->  <InstList>
         // [3] <Code>  ->  EPSILON
         System.out.println("Code1");
+        for (ParseTree child : children) {
+            System.out.println(child.label.getTerminal());
+        }
+        System.out.println("codeLabel: "+this.label);
 
         // if it has a child, it is not EPSILON so we call instList
         if (children.get(0).label.isNonTerminal()) {
@@ -233,6 +240,7 @@ public class ParseTree {
     public void instructionList() {
         // [4] <InstList>  ->  <Instruction><InstListTail>
         System.out.println("InstructionList1");
+        System.out.println("instructionListLabel: "+this.label);
 
         // call instruction
         if (children.get(0).label.isNonTerminal()) {
@@ -250,6 +258,7 @@ public class ParseTree {
         // [5] <InstListTail>  ->  ...<Instruction><InstListTail>
         // [6] <InstListTail>  ->  EPSILON
         System.out.println("InstructionListTail1");
+        System.out.println("instructionListTailLabel: "+this.label);
 
         LexicalUnit lu = children.get(0).label.getTerminal();
         if (lu == LexicalUnit.DOTS) {
@@ -269,6 +278,7 @@ public class ParseTree {
         // [12] <Instruction>  ->  begin <InstList> end
 
         System.out.println("Instruction1");
+        System.out.println("instructionLabel: "+this.label);
 
         if (children.get(0).label.isNonTerminal()) {
             switch (children.get(0).label.getNonTerminal()) {
@@ -292,6 +302,7 @@ public class ParseTree {
         // [13] <Assign>  ->  [Varname] := <ExprArith>
 
         System.out.println("Assign1");
+        System.out.println("assignLabel: "+this.label);
 
         String code;
         if (!varStored.contains(children.get(0).label.getValue())) {
@@ -311,6 +322,8 @@ public class ParseTree {
     public void exprArith() {
 
         System.out.println("ExprArith1");
+        System.out.println("exprArithLabel: "+this.label);
+        System.out.println(children.size());
         // [14] <ExprArith>  ->  <Prod> <ExprArith'>
         children.get(0).prod();
         children.get(1).exprArithPrime();
@@ -323,6 +336,7 @@ public class ParseTree {
         // [16] <ExprArith'>  ->  - <Prod> <ExprArith'>
         // [17] <ExprArith'>  ->  EPSILON
         System.out.println("ExprArithPrime1");
+        System.out.println("exprArithPrimeLabel: "+this.label);
 
         LexicalUnit lu = children.get(0).label.getTerminal();
         switch (lu) {
@@ -351,6 +365,7 @@ public class ParseTree {
 
     public void prod() {
         System.out.println("Prod1");
+        System.out.println("prodLabel: "+this.label);
         // [18] <Prod>  ->  <Atom> <Prod'>
         children.get(0).atom();
         children.get(1).prodPrime();
@@ -360,6 +375,7 @@ public class ParseTree {
 
     public void prodPrime() {
         System.out.println("ProdPrime1");
+        System.out.println("prodPrimeLabel: "+this.label);
         // [19] <Prod'>  ->  * <Atom> <Prod'>
         // [20] <Prod'>  ->  / <Atom> <Prod'>
         // [21] <Prod'>  ->  EPSILON
@@ -407,6 +423,7 @@ public class ParseTree {
         // [25] <Atom>  ->  [Number]
 
         System.out.println("Atom1");
+        System.out.println("atomLabel: "+this.label);
         System.out.println(children.get(0).label.getTerminal());
 
         LexicalUnit lu = children.get(0).label.getTerminal();
@@ -437,6 +454,7 @@ public class ParseTree {
 
     public void ifExpr() {
         System.out.println("If1");
+        System.out.println("ifLabel: "+this.label);
         // [26] <If>  -> if <Cond> then <Instruction> else <IfTail>
         children.get(1).cond();
         String code = "  br i1 %" + varCounter + ", label %if" + ifCounter; // conditional jump to if or else
@@ -467,6 +485,7 @@ public class ParseTree {
 
     public void ifTail() {
         System.out.println("IfTail1");
+        System.out.println("ifTailLabel: "+this.label);
         // [27] <IfTail>  ->  <Instruction>
         // [28] <IfTail>  ->  EPSILON
         if (children.get(0).label.isNonTerminal()) {
@@ -477,6 +496,12 @@ public class ParseTree {
 
     public void cond() {
         // [29] <Cond>  ->  <Conj> <Cond'>
+        System.out.println(children);
+        System.out.println("Cond1");
+        System.out.println("CondLabel: "+this.label +"\n");
+        for (ParseTree child : children) {
+            System.out.println("cond: "+child.label.getTerminal());
+        }
         children.get(0).conj();
         children.get(1).condPrime();
 
@@ -485,12 +510,17 @@ public class ParseTree {
 
     public void condPrime() {
         System.out.println("CondPrime1");
+        System.out.println("condPrimeLabel: "+this.label);
         // [30] <Cond'>  ->  or <Conj> <Cond'>
         // [31] <Cond'>  ->  EPSILON
-        if (children.get(1).label.isNonTerminal()) {
+
+        LexicalUnit lu = children.get(0).label.getTerminal();
+        if (lu == LexicalUnit.OR) {
             children.get(1).conj();
-        }
-        if (children.get(2).label.isNonTerminal()) {
+            String leftVar = "%" + (varCounter-1);
+            String rightVar = "%" + varCounter;
+            String code = "  %" + ++varCounter + "= or i1 " + leftVar + ", " + rightVar + "\n";
+            codeToOut.append(code);
             children.get(2).condPrime();
         }
 
@@ -500,21 +530,26 @@ public class ParseTree {
     public void conj() {
         System.out.println("Conj1");
         // [32] <Conj>  ->  <SimpleCond> <Conj'>
-        if (children.size() > 1) {    // TODO: remove this if
-            children.get(0).simpleCond();
-            children.get(1).conjPrime();
-        }
+        System.out.println("ConjLabel: "+this.label +"\n");
+        children.get(0).simpleCond();
+        children.get(1).conjPrime();
+
         System.out.println("Conj");
     }
 
     public void conjPrime() {
         System.out.println("ConjPrime1");
+        System.out.println("conjPrimeLabel: "+this.label);
         // [33] <Conj'>  ->  and <SimpleCond> <Conj'>
         // [34] <Conj'>  ->  EPSILON
-        if (children.get(1).label.isNonTerminal()) {
+
+        LexicalUnit lu = children.get(0).label.getTerminal();
+        if (lu == LexicalUnit.AND) {
             children.get(1).simpleCond();
-        }
-        if (children.get(2).label.isNonTerminal()) {
+            String leftVar = "%" + (varCounter-1);
+            String rightVar = "%" + varCounter;
+            String code = "  %" + ++varCounter + "= and i1 " + leftVar + ", " + rightVar + "\n";
+            codeToOut.append(code);
             children.get(2).conjPrime();
         }
 
@@ -523,16 +558,21 @@ public class ParseTree {
 
     public void simpleCond() {
         System.out.println("SimpleCond1");
+        System.out.println("simpleCondLabel: "+this.label);
         // [35] <SimpleCond>  ->  {<Cond>}
         // [36] <SimpleCond>  ->  <ExprArith> <Comp> <ExprArith>
 
-        if (children.get(0).label.isNonTerminal()) { // if it is a ExprArith
-            children.get(0).exprArith();
-            children.get(1).compOp();
-            children.get(2).exprArith();
-        }
-        if (children.get(1).label.isNonTerminal()) { // if it is a Cond
+        LexicalUnit lu = children.get(0).label.getTerminal();
+        if (lu == LexicalUnit.LBRACK) {
             children.get(1).cond();
+        } else {
+            children.get(0).exprArith();
+            String leftVar = "%" + (varCounter-1);
+            String rightVar = "%" + varCounter;
+            String comp = children.get(1).compOp();
+            children.get(2).exprArith();
+            String code = "  %" + ++varCounter + "= icmp " + comp + " i32 " + leftVar + ", " + rightVar + "\n";
+            codeToOut.append(code);
         }
 
         System.out.println("SimpleCond");
@@ -542,6 +582,7 @@ public class ParseTree {
         // [37] <Comp>  ->  =
         // [38] <Comp>  ->  <
         System.out.println("Comp");
+        System.out.println("compLabel: "+this.label);
         return switch (children.get(0).label.getTerminal()) {
             case EQUAL -> "eq";
             case SMALLER -> "slt";
@@ -551,25 +592,38 @@ public class ParseTree {
     }
 
     public void whileExpr() {
-        System.out.println("While1");
         // [39] <While>  ->  while <Cond> do <Instruction>
+        System.out.println("While1");
+        System.out.println("whileLabel: " + this.label);
+
+        // Début de la boucle while
         String code = "While" + whileCounter + ":\n";
         codeToOut.append(code);
+
+        // Générer la condition de la boucle
         children.get(1).cond();
-        code = "  br i1 %" + varCounter + ", label %WhileBody" + whileCounter + ", label %EndWhile" + whileCounter + "\n";
-        code += "WhileBody" + whileCounter + ":\n";
+        code = "  br i1 %" + (varCounter - 1) + ", label %WhileBody" + whileCounter + ", label %EndWhile" + whileCounter + "\n"; // -1 car cond() incrémente varCounter
+        codeToOut.append(code);
+
+        // Corps de la boucle
+        code = "WhileBody" + whileCounter + ":\n";
         codeToOut.append(code);
         children.get(3).instruction();
-        code = "  br label %While" + whileCounter + "\n";
-        code += "EndWhile" + whileCounter + ":\n";
+        code = "  br label %While" + whileCounter + "\n"; // Sauter à l'étiquette de début de la boucle
         codeToOut.append(code);
-        whileCounter++;
 
+        // Fin de la boucle
+        code = "EndWhile" + whileCounter + ":\n";
+        codeToOut.append(code);
+
+        whileCounter++;
         System.out.println("While");
     }
 
+
     public void printExpr() {
         System.out.println("Print1");
+        System.out.println("printLabel: "+this.label);
         // [40] <Print>  ->  print([VarName])
         String code = "  " + "%" + ++varCounter + "= load i32, i32* %" + children.get(2).label.getValue().toString() + "\n"
                 + "  call void @println(i32 " + "%" + varCounter + ")\n";
@@ -581,6 +635,7 @@ public class ParseTree {
 
     public void readExpr() {
         System.out.println("Read1");
+        System.out.println("readLabel: "+this.label);
         String code;
         if (!varStored.contains(children.get(2).label.getValue())){
             code = "  %" + children.get(2).label.getValue() + "= alloca i32\n";

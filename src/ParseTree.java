@@ -374,47 +374,38 @@ public class ParseTree {
     }
 
     public void prodPrime() {
-        System.out.println("ProdPrime1");
-        System.out.println("prodPrimeLabel: "+this.label);
         // [19] <Prod'>  ->  * <Atom> <Prod'>
         // [20] <Prod'>  ->  / <Atom> <Prod'>
         // [21] <Prod'>  ->  EPSILON
+        System.out.println("ProdPrime1");
+        System.out.println("prodPrimeLabel: " + this.label);
 
         LexicalUnit lu = children.get(0).label.getTerminal();
         switch (lu) {
             case TIMES -> {
                 System.out.println("---TIMES---");
                 children.get(1).atom();
-                String currentVar = "%" + varCounter;
+                String firstVar = "%" + (varCounter-1); // Première variable pour la multiplication
                 children.get(2).prodPrime();
-                String nextVar = "%" + ++varCounter;
-                String code = "  " + nextVar +"= mul i32 " + currentVar + " , " + nextVar + "\n";
+                String secondVar = "%" + varCounter; // Deuxième variable
+                String resultVar = "%" + ++varCounter; // Variable pour le résultat
+                String code = "  " + resultVar + "= mul i32 " + firstVar + " , " + secondVar + "\n";
                 codeToOut.append(code);
             }
             case DIVIDE -> {
                 System.out.println("---DIVIDE---");
                 children.get(1).atom();
-                String currentVar = "%" + varCounter;
+                String numeratorVar = "%" + (varCounter-1); // Numérateur
                 children.get(2).prodPrime();
-                String nextVar = "%" + ++varCounter;
-                String code = "  " + nextVar +"= sdiv i32 " + currentVar + " , " + nextVar + "\n";
+                String denominatorVar = "%" + varCounter; // Dénominateur
+                String resultVar = "%" + ++varCounter; // Variable pour le résultat
+                String code = "  " + resultVar + "= sdiv i32 " + numeratorVar + " , " + denominatorVar + "\n";
                 codeToOut.append(code);
             }
         }
-
-        // if it has a child, it is not EPSILON so we call Atom
-//        System.out.print(children.size());
-//        if (children.get(1).label.isNonTerminal()) {
-//            children.get(1).atom();
-//        }
-//        // if it has a child, it is not EPSILON so we call prodPrime (treat the next Atom)
-//        if (children.get(2).label.isNonTerminal()) {
-//            children.get(2).prodPrime();
-//        }
-
-
         System.out.println("ProdPrime");
     }
+
 
     public void atom() {
         // [22] <Atom>  ->  - <Atom>
@@ -437,10 +428,13 @@ public class ParseTree {
             }
             case MINUS -> {
                 children.get(1).atom();
+                String prevVar = "%" + (varCounter-1);
                 String currentVar = "%" + varCounter;
                 String nextVar = "%" + ++varCounter;
                 String code = "  " + nextVar +"= mul i32 " + " -1" + " , " + currentVar + "\n";
                 codeToOut.append(code);
+//                code = "  %" + ++varCounter + "= mul i32 " + prevVar + " , " + nextVar + "\n";
+//                codeToOut.append(code);
             }
             case VARNAME -> {
                 String code = "  " + "%" + ++varCounter + "= load i32, i32* " + "%" + children.get(0).label.getValue() + "\n";

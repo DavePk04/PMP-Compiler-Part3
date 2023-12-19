@@ -200,10 +200,14 @@
 	}
 
 	public NonTerminal getNonTerminal(){
-		return (NonTerminal) this.value;
+		if (this.value instanceof NonTerminal) {
+			return (NonTerminal) this.value;
+		} else {
+			return null;
+		}
 	}
 
 	public LexicalUnit getTerminal() {
-		return (LexicalUnit) this.value;
+		return this.type;
 	}
 }

@@ -251,13 +251,9 @@ public class ParseTree {
         // [6] <InstListTail>  ->  EPSILON
         System.out.println("InstructionListTail1");
 
-        // if it has a child, it is not EPSILON so we call Instruction
-        if (children.get(1).label.isNonTerminal()) {
+        LexicalUnit lu = children.get(0).label.getTerminal();
+        if (lu == LexicalUnit.DOTS) {
             children.get(1).instruction();
-        }
-
-        // if it has a child, it is not EPSILON so we call instructionListTail (treat the next instruction)
-        if (children.get(2).label.isNonTerminal()) {
             children.get(2).instructionListTail();
         }
 
@@ -283,8 +279,10 @@ public class ParseTree {
                 case Read -> children.get(0).readExpr();
             }
         }
-        // call instructionList
-        if (children.get(1).label.isNonTerminal()) {
+        System.out.println("Instruction2");
+
+        // [12] <Instruction>  ->  begin <InstList> end
+        if (children.get(0).label.getValue().toString().equals("BEG")) {
             children.get(1).instructionList();
         }
         System.out.println("Instruction");
@@ -321,18 +319,31 @@ public class ParseTree {
     }
 
     public void exprArithPrime() {
-        System.out.println("ExprArithPrime1");
         // [15] <ExprArith'>  ->  + <Prod> <ExprArith'>
         // [16] <ExprArith'>  ->  - <Prod> <ExprArith'>
         // [17] <ExprArith'>  ->  EPSILON
+        System.out.println("ExprArithPrime1");
 
-        // if it has a child, it is not EPSILON so we call Prod
-        if (children.get(1).label.isNonTerminal()) {
-            children.get(1).prod();
-        }
-        // if it has a child, it is not EPSILON so we call exprArithPrime (treat the next Prod)
-        if (children.get(2).label.isNonTerminal()) {
-            children.get(2).exprArithPrime();
+        LexicalUnit lu = children.get(0).label.getTerminal();
+        switch (lu) {
+            case PLUS -> {
+                children.get(1).prod();
+                String leftVar = "%" + (varCounter-1);
+                String rightVar = "%" + varCounter;
+                children.get(2).exprArithPrime();
+                String resVar = "%" + ++varCounter;
+                String code = "  " + resVar + "= add i32 " + leftVar + ", " + rightVar + "\n";
+                codeToOut.append(code);
+            }
+            case MINUS -> {
+                children.get(1).prod();
+                String leftVar = "%" + (varCounter-1);
+                String rightVar = "%" + varCounter;
+                children.get(2).exprArithPrime();
+                String restVar = "%" + ++varCounter;
+                String code = "  " + restVar + "= sub i32 " + leftVar + ", " + rightVar + "\n";
+                codeToOut.append(code);
+            }
         }
 
         System.out.println("ExprArithPrime");
@@ -353,14 +364,38 @@ public class ParseTree {
         // [20] <Prod'>  ->  / <Atom> <Prod'>
         // [21] <Prod'>  ->  EPSILON
 
+        LexicalUnit lu = children.get(0).label.getTerminal();
+        switch (lu) {
+            case TIMES -> {
+                System.out.println("---TIMES---");
+                children.get(1).atom();
+                String currentVar = "%" + varCounter;
+                children.get(2).prodPrime();
+                String nextVar = "%" + ++varCounter;
+                String code = "  " + nextVar +"= mul i32 " + currentVar + " , " + nextVar + "\n";
+                codeToOut.append(code);
+            }
+            case DIVIDE -> {
+                System.out.println("---DIVIDE---");
+                children.get(1).atom();
+                String currentVar = "%" + varCounter;
+                children.get(2).prodPrime();
+                String nextVar = "%" + ++varCounter;
+                String code = "  " + nextVar +"= sdiv i32 " + currentVar + " , " + nextVar + "\n";
+                codeToOut.append(code);
+            }
+        }
+
         // if it has a child, it is not EPSILON so we call Atom
-        if (children.get(1).label.isNonTerminal()) {
-            children.get(1).atom();
-        }
-        // if it has a child, it is not EPSILON so we call prodPrime (treat the next Atom)
-        if (children.get(2).label.isNonTerminal()) {
-            children.get(2).prodPrime();
-        }
+//        System.out.print(children.size());
+//        if (children.get(1).label.isNonTerminal()) {
+//            children.get(1).atom();
+//        }
+//        // if it has a child, it is not EPSILON so we call prodPrime (treat the next Atom)
+//        if (children.get(2).label.isNonTerminal()) {
+//            children.get(2).prodPrime();
+//        }
+
 
         System.out.println("ProdPrime");
     }
@@ -372,10 +407,13 @@ public class ParseTree {
         // [25] <Atom>  ->  [Number]
 
         System.out.println("Atom1");
+        System.out.println(children.get(0).label.getTerminal());
 
         LexicalUnit lu = children.get(0).label.getTerminal();
+        System.out.println("Atom2");
         switch (lu) {
             case NUMBER -> {
+                System.out.println("Atom3");
                 String nextVar = "%" + ++varCounter;
                 String code = "  " + nextVar + "= add i32 0 , " + children.get(0).label.getValue() + "\n";
                 codeToOut.append(code);
@@ -462,9 +500,10 @@ public class ParseTree {
     public void conj() {
         System.out.println("Conj1");
         // [32] <Conj>  ->  <SimpleCond> <Conj'>
-        children.get(0).simpleCond();
-        children.get(1).conjPrime();
-
+        if (children.size() > 1) {    // TODO: remove this if
+            children.get(0).simpleCond();
+            children.get(1).conjPrime();
+        }
         System.out.println("Conj");
     }
 

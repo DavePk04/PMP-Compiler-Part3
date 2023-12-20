@@ -76,41 +76,41 @@ public class Main{
 //                System.out.println(fileNameWithoutExtension);
                 System.out.println(parseTree.getCodeToOut(
                         ));
-                String codeToOut = String.valueOf(parseTree.getCodeToOut());
-                // Construct the output file name with .txt extension
-                String outputFileName = "results/" + fileNameWithoutExtension + ".txt";
+//                String codeToOut = String.valueOf(parseTree.getCodeToOut());
+//                // Construct the output file name with .txt extension
+//                String outputFileName = "results/" + fileNameWithoutExtension + ".txt";
+////
+//                // Create a StringBuilder object
+//                StringBuilder codeToOutRes = new StringBuilder(codeToOut);
 //
-                // Create a StringBuilder object
-                StringBuilder codeToOutRes = new StringBuilder(codeToOut);
-
-                // Write the contents of codeToOut to the output file only if the file does not exist
-                if (new File(outputFileName).exists() == false) {
-                    try {
-                        // Create a new file
-                        File file = new File(outputFileName);
-
-                        // Create a file writer object
-                        FileWriter fileWriter = new FileWriter(file);
-
-                        // Create a buffered writer object
-                        BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-
-                        // Write the contents of codeToOut to the output file
-                        bufferedWriter.write(codeToOutRes.toString());
-
-                        // Close the buffered writer object
-                        bufferedWriter.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-                // if the content codeToOut is equal to the content of the output file, then the program is correct
-                // otherwise, the program is incorrect
-                if (codeToOut.equals(new String(Files.readAllBytes(Paths.get(outputFileName))))) {
-                    System.out.println("The program is correct");
-                } else {
-                    System.out.println("The program is incorrect");
-                }
+//                // Write the contents of codeToOut to the output file only if the file does not exist
+//                if (new File(outputFileName).exists() == false) {
+//                    try {
+//                        // Create a new file
+//                        File file = new File(outputFileName);
+//
+//                        // Create a file writer object
+//                        FileWriter fileWriter = new FileWriter(file);
+//
+//                        // Create a buffered writer object
+//                        BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+//
+//                        // Write the contents of codeToOut to the output file
+//                        bufferedWriter.write(codeToOutRes.toString());
+//
+//                        // Close the buffered writer object
+//                        bufferedWriter.close();
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//                // if the content codeToOut is equal to the content of the output file, then the program is correct
+//                // otherwise, the program is incorrect
+//                if (codeToOut.equals(new String(Files.readAllBytes(Paths.get(outputFileName))))) {
+//                    System.out.println("The program is correct");
+//                } else {
+//                    System.out.println("The program is incorrect");
+//                }
                 System.out.println("---------------------------------");
 
 

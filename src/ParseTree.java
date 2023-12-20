@@ -81,7 +81,6 @@ public class ParseTree {
     public ParseTree(NonTerminal lbl, List<ParseTree> chdn) {
         this.label = new Symbol(null,lbl);
         this.children = chdn;
-//        System.out.println("ParseTreeLabel: "+this.label +"\n");
     }
 
     /* Pure LaTeX version (using the forest package) */
@@ -208,9 +207,6 @@ public class ParseTree {
     private static boolean print = false;
 
     public void program() {
-        System.out.println("Program1");
-        System.out.println(children);
-        System.out.println("programLabel: "+this.label);
         // [1] <Program>  ->  begin <Code> end
         codeToOut.append("define i32 @main() {\n");
         children.get(1).code();
@@ -218,30 +214,19 @@ public class ParseTree {
 
         if (read) {codeToOut.append(get_print());}
         if (print) {codeToOut.append(get_read());}
-        System.out.println("Program2");
     }
 
     public void code() {
         // [2] <Code>  ->  <InstList>
         // [3] <Code>  ->  EPSILON
-        System.out.println("Code1");
-        for (ParseTree child : children) {
-            System.out.println(child.label.getTerminal());
-        }
-        System.out.println("codeLabel: "+this.label);
-
         // if it has a child, it is not EPSILON so we call instList
         if (children.get(0).label.isNonTerminal()) {
             children.get(0).instructionList();
         }
-        System.out.println("Code2");
     }
 
     public void instructionList() {
         // [4] <InstList>  ->  <Instruction><InstListTail>
-        System.out.println("InstructionList1");
-        System.out.println("instructionListLabel: "+this.label);
-
         // call instruction
         if (children.get(0).label.isNonTerminal()) {
             children.get(0).instruction();
@@ -251,22 +236,17 @@ public class ParseTree {
         if (children.get(1).label.isNonTerminal()) {
             children.get(1).instructionListTail();
         }
-        System.out.println("InstructionList");
     }
 
     public void instructionListTail() {
         // [5] <InstListTail>  ->  ...<Instruction><InstListTail>
         // [6] <InstListTail>  ->  EPSILON
-        System.out.println("InstructionListTail1");
-        System.out.println("instructionListTailLabel: "+this.label);
 
         LexicalUnit lu = children.get(0).label.getTerminal();
         if (lu == LexicalUnit.DOTS) {
             children.get(1).instruction();
             children.get(2).instructionListTail();
         }
-
-        System.out.println("InstructionListTail");
     }
 
     public void instruction() {
@@ -277,9 +257,6 @@ public class ParseTree {
         // [11] <Instruction>  ->  <Read>
         // [12] <Instruction>  ->  begin <InstList> end
 
-        System.out.println("Instruction1");
-        System.out.println("instructionLabel: "+this.label);
-
         if (children.get(0).label.isNonTerminal()) {
             switch (children.get(0).label.getNonTerminal()) {
                 case Assign -> children.get(0).assignExpr();
@@ -288,21 +265,21 @@ public class ParseTree {
                 case Print -> children.get(0).printExpr();
                 case Read -> children.get(0).readExpr();
             }
+            return;
         }
-        System.out.println("Instruction2");
 
         // [12] <Instruction>  ->  begin <InstList> end
-        if (children.get(0).label.getValue().toString().equals("BEG")) {
+        if (children.get(0).label.getType().equals(LexicalUnit.BEG)) {
             children.get(1).instructionList();
+            return;
         }
-        System.out.println("Instruction");
+        System.out.println(children.get(0).label.getValue().toString());
+
+        throw new RuntimeException("Error in instruction");
     }
 
     public void assignExpr() {
         // [13] <Assign>  ->  [Varname] := <ExprArith>
-
-        System.out.println("Assign1");
-        System.out.println("assignLabel: "+this.label);
 
         String code;
         if (!varStored.contains(children.get(0).label.getValue())) {
@@ -315,28 +292,18 @@ public class ParseTree {
         children.get(2).exprArith();
         code = "  store i32 %" + varCounter + ", i32* %" + children.get(0).label.getValue() + "\n";
         codeToOut.append(code);
-
-        System.out.println("Assign");
     }
 
     public void exprArith() {
-
-        System.out.println("ExprArith1");
-        System.out.println("exprArithLabel: "+this.label);
-        System.out.println(children.size());
         // [14] <ExprArith>  ->  <Prod> <ExprArith'>
         children.get(0).prod();
         children.get(1).exprArithPrime();
-
-        System.out.println("ExprArith");
     }
 
     public void exprArithPrime() {
         // [15] <ExprArith'>  ->  + <Prod> <ExprArith'>
         // [16] <ExprArith'>  ->  - <Prod> <ExprArith'>
         // [17] <ExprArith'>  ->  EPSILON
-        System.out.println("ExprArithPrime1");
-        System.out.println("exprArithPrimeLabel: "+this.label);
 
         LexicalUnit lu = children.get(0).label.getTerminal();
         switch (lu) {
@@ -359,31 +326,21 @@ public class ParseTree {
                 codeToOut.append(code);
             }
         }
-
-        System.out.println("ExprArithPrime");
     }
 
     public void prod() {
-        System.out.println("Prod1");
-        System.out.println("prodLabel: "+this.label);
         // [18] <Prod>  ->  <Atom> <Prod'>
         children.get(0).atom();
         children.get(1).prodPrime();
-
-        System.out.println("Prod");
     }
 
     public void prodPrime() {
         // [19] <Prod'>  ->  * <Atom> <Prod'>
         // [20] <Prod'>  ->  / <Atom> <Prod'>
         // [21] <Prod'>  ->  EPSILON
-        System.out.println("ProdPrime1");
-        System.out.println("prodPrimeLabel: " + this.label);
-
         LexicalUnit lu = children.get(0).label.getTerminal();
         switch (lu) {
             case TIMES -> {
-                System.out.println("---TIMES---");
                 children.get(1).atom();
                 String firstVar = "%" + (varCounter-1); // Première variable pour la multiplication
                 children.get(2).prodPrime();
@@ -393,7 +350,6 @@ public class ParseTree {
                 codeToOut.append(code);
             }
             case DIVIDE -> {
-                System.out.println("---DIVIDE---");
                 children.get(1).atom();
                 String numeratorVar = "%" + (varCounter-1); // Numérateur
                 children.get(2).prodPrime();
@@ -403,7 +359,6 @@ public class ParseTree {
                 codeToOut.append(code);
             }
         }
-        System.out.println("ProdPrime");
     }
 
 
@@ -413,15 +368,9 @@ public class ParseTree {
         // [24] <Atom>  ->  [Varname]
         // [25] <Atom>  ->  [Number]
 
-        System.out.println("Atom1");
-        System.out.println("atomLabel: "+this.label);
-        System.out.println(children.get(0).label.getTerminal());
-
         LexicalUnit lu = children.get(0).label.getTerminal();
-        System.out.println("Atom2");
         switch (lu) {
             case NUMBER -> {
-                System.out.println("Atom3");
                 String nextVar = "%" + ++varCounter;
                 String code = "  " + nextVar + "= add i32 0 , " + children.get(0).label.getValue() + "\n";
                 codeToOut.append(code);
@@ -443,12 +392,9 @@ public class ParseTree {
             case LPAREN -> children.get(1).exprArith();
         }
 
-        System.out.println("Atom");
     }
 
     public void ifExpr() {
-        System.out.println("If1");
-        System.out.println("ifLabel: "+this.label);
         // [26] <If>  -> if <Cond> then <Instruction> else <IfTail>
         children.get(1).cond();
         String code = "  br i1 %" + varCounter + ", label %if" + ifCounter; // conditional jump to if or else
@@ -473,38 +419,23 @@ public class ParseTree {
         code += "EndIf" + ifCounter + ":\n";
         codeToOut.append(code);
         ifCounter++;
-
-        System.out.println("If");
     }
 
     public void ifTail() {
-        System.out.println("IfTail1");
-        System.out.println("ifTailLabel: "+this.label);
         // [27] <IfTail>  ->  <Instruction>
         // [28] <IfTail>  ->  EPSILON
         if (children.get(0).label.isNonTerminal()) {
             children.get(0).instruction();
         }
-        System.out.println("IfTail");
     }
 
     public void cond() {
         // [29] <Cond>  ->  <Conj> <Cond'>
-        System.out.println(children);
-        System.out.println("Cond1");
-        System.out.println("CondLabel: "+this.label +"\n");
-        for (ParseTree child : children) {
-            System.out.println("cond: "+child.label.getTerminal());
-        }
         children.get(0).conj();
         children.get(1).condPrime();
-
-        System.out.println("Cond");
     }
 
     public void condPrime() {
-        System.out.println("CondPrime1");
-        System.out.println("condPrimeLabel: "+this.label);
         // [30] <Cond'>  ->  or <Conj> <Cond'>
         // [31] <Cond'>  ->  EPSILON
 
@@ -517,23 +448,15 @@ public class ParseTree {
             codeToOut.append(code);
             children.get(2).condPrime();
         }
-
-        System.out.println("CondPrime");
     }
 
     public void conj() {
-        System.out.println("Conj1");
         // [32] <Conj>  ->  <SimpleCond> <Conj'>
-        System.out.println("ConjLabel: "+this.label +"\n");
         children.get(0).simpleCond();
         children.get(1).conjPrime();
-
-        System.out.println("Conj");
     }
 
     public void conjPrime() {
-        System.out.println("ConjPrime1");
-        System.out.println("conjPrimeLabel: "+this.label);
         // [33] <Conj'>  ->  and <SimpleCond> <Conj'>
         // [34] <Conj'>  ->  EPSILON
 
@@ -546,13 +469,9 @@ public class ParseTree {
             codeToOut.append(code);
             children.get(2).conjPrime();
         }
-
-        System.out.println("ConjPrime");
     }
 
     public void simpleCond() {
-        System.out.println("SimpleCond1");
-        System.out.println("simpleCondLabel: "+this.label);
         // [35] <SimpleCond>  ->  {<Cond>}
         // [36] <SimpleCond>  ->  <ExprArith> <Comp> <ExprArith>
 
@@ -568,15 +487,11 @@ public class ParseTree {
             String code = "  %" + ++varCounter + "= icmp " + comp + " i32 " + leftVar + ", " + rightVar + "\n";
             codeToOut.append(code);
         }
-
-        System.out.println("SimpleCond");
     }
 
     public String compOp() {
         // [37] <Comp>  ->  =
         // [38] <Comp>  ->  <
-        System.out.println("Comp");
-        System.out.println("compLabel: "+this.label);
         return switch (children.get(0).label.getTerminal()) {
             case EQUAL -> "eq";
             case SMALLER -> "slt";
@@ -586,51 +501,32 @@ public class ParseTree {
     }
 
     public void whileExpr() {
+        Integer whileCount = whileCounter++;
         // [39] <While>  ->  while <Cond> do <Instruction>
-        System.out.println("While1");
-        System.out.println("whileLabel: " + this.label);
-
-        int currentWhileCounter = whileCounter++; // Utiliser une variable locale pour cette boucle while spécifique
-
-        // Début de la boucle while
-        String code = "While" + currentWhileCounter + ":\n";
-        codeToOut.append(code);
-
-        // Générer la condition de la boucle
+        String code = "  br label %CondWhile" + whileCount + "\n" +  // unconditional jump to while
+                "CondWhile" + whileCount +":\n";
+        codeToOut.append(code); // get code of WHILE condition
         children.get(1).cond();
-        code = "  br i1 %" + varCounter + ", label %WhileBody" + currentWhileCounter + ", label %EndWhile" + currentWhileCounter + "\n";
-        codeToOut.append(code);
-
-        // Corps de la boucle
-        code = "WhileBody" + currentWhileCounter + ":\n";
+        code = "  br i1 " + "%" + varCounter + ", label %While" + whileCount + ", label %WhileEnd" +
+                whileCount + "\n" +
+                "While" + whileCount + ":\n";
         codeToOut.append(code);
         children.get(3).instruction();
-        code = "  br label %While" + currentWhileCounter + "\n";
+        code = "  br label %CondWhile" + whileCount+ "\n" +
+                "WhileEnd" + whileCount + ":\n";
         codeToOut.append(code);
-
-        // Fin de la boucle
-        code = "EndWhile" + currentWhileCounter + ":\n";
-        codeToOut.append(code);
-
-        System.out.println("While");
     }
 
 
     public void printExpr() {
-        System.out.println("Print1");
-        System.out.println("printLabel: "+this.label);
         // [40] <Print>  ->  print([VarName])
         String code = "  " + "%" + ++varCounter + "= load i32, i32* %" + children.get(2).label.getValue().toString() + "\n"
                 + "  call void @println(i32 " + "%" + varCounter + ")\n";
         codeToOut.append(code);
         print = true;
-
-        System.out.println("Print");
     }
 
     public void readExpr() {
-        System.out.println("Read1");
-        System.out.println("readLabel: "+this.label);
         String code;
         if (!varStored.contains(children.get(2).label.getValue())){
             code = "  %" + children.get(2).label.getValue() + "= alloca i32\n";
@@ -641,8 +537,6 @@ public class ParseTree {
                 "  store i32 " + "%" + varCounter + ", i32* %" + children.get(2).label.getValue() + "\n";
         codeToOut.append(code);
         read = true;
-
-        System.out.println("Read");
     }
 
     private static String get_print(){
@@ -661,11 +555,11 @@ public class ParseTree {
                 @.strR= private unnamed_addr constant [3 x i8] c"%d\\00", align 1
                 define i32 @readInt() {
                   %var= alloca i32, align 4
-                  %1= call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.strR, i32 0, i32 0), i32* %var)
+                  %1= call i32 (i8*, ...) @scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.strR, i32 0, i32 0), i32* %var)
                   %2= load i32, i32* %var, align 4
                   ret i32 %2
                 }
-                declare i32 @__isoc99_scanf(i8*, ...)
+                declare i32 @scanf(i8*, ...)
                 """;
     }
 

@@ -1,11 +1,7 @@
-import java.io.FileReader;
-import java.io.FileNotFoundException;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.TreeMap;
@@ -74,7 +70,50 @@ public class Main{
             try {
                 parseTree = parser.parse();
                 parseTree.program();
-                System.out.println(parseTree.getCodeToOut());
+                String inputFileName = args[args.length-1];
+                String fileNameWithoutPath = inputFileName.substring(inputFileName.lastIndexOf('/') + 1);
+                String fileNameWithoutExtension = fileNameWithoutPath.substring(0, fileNameWithoutPath.lastIndexOf('.'));
+//                System.out.println(fileNameWithoutExtension);
+                System.out.println(parseTree.getCodeToOut(
+                        ));
+                String codeToOut = String.valueOf(parseTree.getCodeToOut());
+                // Construct the output file name with .txt extension
+                String outputFileName = "results/" + fileNameWithoutExtension + ".txt";
+//
+                // Create a StringBuilder object
+                StringBuilder codeToOutRes = new StringBuilder(codeToOut);
+
+                // Write the contents of codeToOut to the output file only if the file does not exist
+                if (new File(outputFileName).exists() == false) {
+                    try {
+                        // Create a new file
+                        File file = new File(outputFileName);
+
+                        // Create a file writer object
+                        FileWriter fileWriter = new FileWriter(file);
+
+                        // Create a buffered writer object
+                        BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+
+                        // Write the contents of codeToOut to the output file
+                        bufferedWriter.write(codeToOutRes.toString());
+
+                        // Close the buffered writer object
+                        bufferedWriter.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                // if the content codeToOut is equal to the content of the output file, then the program is correct
+                // otherwise, the program is incorrect
+                if (codeToOut.equals(new String(Files.readAllBytes(Paths.get(outputFileName))))) {
+                    System.out.println("The program is correct");
+                } else {
+                    System.out.println("The program is incorrect");
+                }
+                System.out.println("---------------------------------");
+
+
                 if (writeTree) {tex=parseTree.toLaTeX();};
             } catch (ParseException e) {
                 System.out.println("Error:> " + e.getMessage());

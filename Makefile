@@ -21,12 +21,12 @@ testing:
 #	java -jar dist/part2.jar -wt outputs/BeginEndParseTree.tex tests/05-BeginEnd.pmp				# OK
 #	java -jar dist/part2.jar -wt outputs/BeginEndEmptyParseTree.tex tests/05-BeginEndEmpty.pmp		# OK
 #	java -jar dist/part2.jar -wt outputs/BeginEndMultipleParseTree.tex tests/05-BeginEndMultiple.pmp # OK
-	java -jar dist/part2.jar -wt outputs/ExprArithBigParseTree.tex tests/06-ExprArithBig.pmp
-#	java -jar dist/part2.jar -wt outputs/ExprArithPrioritiesParseTree.tex tests/06-ExprArithPriorities.pmp
-#	java -jar dist/part2.jar -wt outputs/ExprArithWithMinusParseTree.tex tests/06-ExprArithWithMinus.pmp
-#	java -jar dist/part2.jar -wt outputs/ExprArithWithParenthesesParseTree.tex tests/06-ExprArithWithParentheses.pmp
+#	java -jar dist/part2.jar -wt outputs/ExprArithBigParseTree.tex tests/06-ExprArithBig.pmp		# OK
+#	java -jar dist/part2.jar -wt outputs/ExprArithPrioritiesParseTree.tex tests/06-ExprArithPriorities.pmp # OK
+#	java -jar dist/part2.jar -wt outputs/ExprArithWithMinusParseTree.tex tests/06-ExprArithWithMinus.pmp  # OK (--3 = -1*-1*3 ?)
+#	java -jar dist/part2.jar -wt outputs/ExprArithWithParenthesesParseTree.tex tests/06-ExprArithWithParentheses.pmp # OK
 #	java -jar dist/part2.jar -wt outputs/ExprArithWrongParseTree.tex tests/06-ExprArithWrong.pmp
-#	java -jar dist/part2.jar -wt outputs/CondBigParseTree.tex tests/07-CondBig.pmp
+	java -jar dist/part2.jar -wt outputs/CondBigParseTree.tex tests/07-CondBig.pmp
 #	java -jar dist/part2.jar -wt outputs/CondPrioritiesParseTree.tex tests/07-CondPriorities.pmp
 #	java -jar dist/part2.jar -wt outputs/CondWithBracketsParseTree.tex tests/07-CondWithBrackets.pmp
 #	java -jar dist/part2.jar -wt outputs/CondWrongParseTree.tex tests/07-CondWrong.pmp

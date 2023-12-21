@@ -87,6 +87,7 @@ public class Main{
                 }
                 String outputFileName = "results/" + fileNameWithoutExtension + ".ll";
                 try {
+                    System.out.println("outputFileName: " + outputFileName);
                     // Create a new file
                     File file = new File(outputFileName);
 

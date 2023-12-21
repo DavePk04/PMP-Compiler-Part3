@@ -219,6 +219,7 @@ public class ParseTree {
     public void code() {
         // [2] <Code>  ->  <InstList>
         // [3] <Code>  ->  EPSILON
+
         // if it has a child, it is not EPSILON so we call instList
         if (children.get(0).label.isNonTerminal()) {
             children.get(0).instructionList();
@@ -227,12 +228,10 @@ public class ParseTree {
 
     public void instructionList() {
         // [4] <InstList>  ->  <Instruction><InstListTail>
-        // call instruction
         if (children.get(0).label.isNonTerminal()) {
             children.get(0).instruction();
         }
 
-        // call instructionListTail
         if (children.get(1).label.isNonTerminal()) {
             children.get(1).instructionListTail();
         }
@@ -283,17 +282,17 @@ public class ParseTree {
         String varName = children.get(0).label.getValue().toString();
         String code;
 
-        // Allocation de mémoire pour la variable si elle n'a pas été allouée auparavant
+        // Allocation of memory for the variable if it has not been allocated before
         if (!varStored.contains(varName)) {
             code = "  %" + varName + "= alloca i32\n";
             codeToOut.append(code);
             varStored.add(varName);
         }
 
-        // Évaluer l'expression arithmétique (côté droit de l'affectation)
+        // Assess the arithmetic expression (right side of the assignment)
         String exprResultVar = children.get(2).exprArith();
 
-        // Stocker le résultat dans la variable (côté gauche de l'affectation)
+        // Store the result in the variable (left side of the assignment)
         code = "  store i32 " + exprResultVar + ", i32* %" + varName + "\n";
         codeToOut.append(code);
 
@@ -308,35 +307,6 @@ public class ParseTree {
             return var1;
         }
     }
-
-
-//    public void exprArithPrime() {
-//        // [15] <ExprArith'>  ->  + <Prod> <ExprArith'>
-//        // [16] <ExprArith'>  ->  - <Prod> <ExprArith'>
-//        // [17] <ExprArith'>  ->  EPSILON
-//
-//        LexicalUnit lu = children.get(0).label.getTerminal();
-//        switch (lu) {
-//            case PLUS -> {
-//                String var1 = children.get(1).prod();
-//                String rightVar = "%" + (varCounter-1);
-//                String resVar = "%" + ++varCounter;
-//                String code = "  " + resVar + "= add i32 " + var1 + ", " + rightVar + "\n";
-//                codeToOut.append(code);
-//                children.get(2).exprArithPrime();
-//            }
-//            case MINUS -> {
-//                String var1 = children.get(1).prod();
-//                String rightVar = "%" + (varCounter-1);
-//                String restVar = "%" + ++varCounter;
-//                String code = "  " + restVar + "= sub i32 " + var1 + ", " + rightVar + "\n";
-//                codeToOut.append(code);
-//                children.get(2).exprArithPrime();
-//            }
-//        }
-//        System.out.println("Error in exprArithPrime");
-//        System.out.println(lu);
-//    }
 
     public String exprArithPrime(String leftVar, ParseTree exprArithPrimeTree) {
         // [15] <ExprArith'>  ->  + <Prod> <ExprArith'>
@@ -366,9 +336,8 @@ public class ParseTree {
                     return resultVar;
                 }
             }
-            // Gérer d'autres cas si nécessaire
         }
-        // Retourner le résultat de la dernière opération effectuée
+        // Return the result of the last operation
         return leftVar;
     }
 
@@ -414,9 +383,8 @@ public class ParseTree {
                     return resultVar;
                 }
             }
-            // Gérer d'autres cas si nécessaire
         }
-        // Retourner le résultat de la dernière opération effectuée
+        // Return the result of the last operation
         return leftVar;
     }
 
@@ -444,8 +412,6 @@ public class ParseTree {
                 String nextVar = "%" + ++varCounter;
                 String code = "  " + nextVar +"= mul i32 " + " -1" + " , " + currentVar + "\n";
                 codeToOut.append(code);
-//                code = "  %" + ++varCounter + "= mul i32 " + prevVar + " , " + nextVar + "\n";
-//                codeToOut.append(code);
                 return nextVar;
             }
             case VARNAME -> {
@@ -461,7 +427,6 @@ public class ParseTree {
 
     public void ifExpr() {
         // [26] <If>  -> if <Cond> then <Instruction> else <IfTail>
-        System.out.println("ifExpr: ");
         String var = children.get(1).cond();
         String code = "  br i1 " + var + ", label %if" + ifCounter; // conditional jump to if or else
         if (children.get(3).label.isNonTerminal()) {
@@ -490,7 +455,6 @@ public class ParseTree {
     public void ifTail() {
         // [27] <IfTail>  ->  <Instruction>
         // [28] <IfTail>  ->  EPSILON
-        System.out.println("ifTail: ");
         if (children.get(0).label.isNonTerminal()) {
             children.get(0).instruction();
         }
@@ -561,16 +525,14 @@ public class ParseTree {
         String var = null;
 
         if (lu == LexicalUnit.LBRACK) {
-            // Condition encapsulée
-            var = children.get(1).cond();  // Capturer le résultat de la condition
+            var = children.get(1).cond();  // retrieve the result of the encapsulated condition
         } else {
-            // Comparaison arithmétique
-            String leftVar = children.get(0).exprArith();  // Évaluer la première expression arithmétique
-            String comp = children.get(1).compOp();        // Obtenir l'opérateur de comparaison
-            String rightVar = children.get(2).exprArith(); // Évaluer la deuxième expression arithmétique
-            System.out.println("leftVar: " + leftVar + " comp: " + comp + " rightVar: " + rightVar);
+            // Arithmetic comparison
+            String leftVar = children.get(0).exprArith();  // Assess the first arithmetic expression
+            String comp = children.get(1).compOp();        // Get the comparison operator
+            String rightVar = children.get(2).exprArith(); // Assess the second arithmetic expression
 
-            // Générer le code de comparaison
+            // Generate comparison code
             String resultVar = "%" + ++varCounter;
             String code = "  " + resultVar + "= icmp " + comp + " i32 " + leftVar + ", " + rightVar + "\n";
             codeToOut.append(code);
@@ -593,8 +555,8 @@ public class ParseTree {
     }
 
     public void whileExpr() {
-        Integer whileCount = whileCounter++;
         // [39] <While>  ->  while <Cond> do <Instruction>
+        Integer whileCount = whileCounter++;
         String code = "  br label %CondWhile" + whileCount + "\n" +  // unconditional jump to while
                 "CondWhile" + whileCount +":\n";
         codeToOut.append(code); // get code of WHILE condition

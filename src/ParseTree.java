@@ -376,40 +376,51 @@ public class ParseTree {
 
     public String prod() {
         // [18] <Prod>  ->  <Atom> <Prod'>
-        String ret = children.get(0).atom();
-        children.get(1).prodPrime();
-        return ret;
+        String var1 = children.get(0).atom();
+        if (children.size() > 1) {
+            return prodPrime(var1, children.get(1));
+        } else {
+            return var1;
+        }
     }
 
-    public String prodPrime() {
+    public String prodPrime(String leftVar, ParseTree prodPrimeTree) {
         // [19] <Prod'>  ->  * <Atom> <Prod'>
         // [20] <Prod'>  ->  / <Atom> <Prod'>
         // [21] <Prod'>  ->  EPSILON
-        LexicalUnit lu = children.get(0).label.getTerminal();
+
+        LexicalUnit lu = prodPrimeTree.children.get(0).label.getTerminal();
+
         switch (lu) {
             case TIMES -> {
-                String var1 = children.get(1).atom();
-                String firstVar = "%" + (varCounter-1); // Première variable pour la multiplication
-                String var2 = children.get(2).prodPrime();
-                String secondVar = "%" + varCounter; // Deuxième variable
-                String resultVar = "%" + ++varCounter; // Variable pour le résultat
-                String code = "  " + resultVar + "= mul i32 " + var1 + " , " + var2 + "\n";
+                String rightVar = prodPrimeTree.children.get(1).atom();
+                String resultVar = "%" + ++varCounter;
+                String code = "  " + resultVar + "= mul i32 " + leftVar + ", " + rightVar + "\n";
                 codeToOut.append(code);
-                return resultVar;
+                if (prodPrimeTree.children.size() > 2) {
+                    return prodPrime(resultVar, prodPrimeTree.children.get(2));
+                } else {
+                    return resultVar;
+                }
             }
             case DIVIDE -> {
-                String var1 = children.get(1).atom();
-                String numeratorVar = "%" + (varCounter-1); // Numérateur
-                String var2 = children.get(2).prodPrime();
-                String denominatorVar = "%" + varCounter; // Dénominateur
-                String resultVar = "%" + ++varCounter; // Variable pour le résultat
-                String code = "  " + resultVar + "= sdiv i32 " + var1 + " , " + var2 + "\n";
+                String rightVar = prodPrimeTree.children.get(1).atom();
+                String resultVar = "%" + ++varCounter;
+                String code = "  " + resultVar + "= sdiv i32 " + leftVar + ", " + rightVar + "\n";
                 codeToOut.append(code);
-                return resultVar;
+                if (prodPrimeTree.children.size() > 2) {
+                    return prodPrime(resultVar, prodPrimeTree.children.get(2));
+                } else {
+                    return resultVar;
+                }
             }
+            // Gérer d'autres cas si nécessaire
         }
-        return null;
+        // Retourner le résultat de la dernière opération effectuée
+        return leftVar;
     }
+
+
 
 
     public String atom() {
@@ -444,7 +455,7 @@ public class ParseTree {
             }
             case LPAREN -> children.get(1).exprArith();
         }
-        return null;
+        return "%" + varCounter;
 
     }
 

@@ -498,24 +498,29 @@ public class ParseTree {
 
     public String cond() {
         // [29] <Cond>  ->  <Conj> <Cond'>
-        System.out.println("cond: " );
-        children.get(0).conj();
-        String var = children.get(1).condPrime();
-        return var;
+
+        String var = children.get(0).conj();
+        if (children.size() > 1) {
+            return condPrime(var, children.get(1));
+        } else {
+            return var;
+        }
     }
 
-    public String condPrime() {
+    public String condPrime(String leftVar, ParseTree condPrimeTree) {
         // [30] <Cond'>  ->  or <Conj> <Cond'>
         // [31] <Cond'>  ->  EPSILON
-        System.out.println("condPrime: ");
-        LexicalUnit lu = children.get(0).label.getTerminal();
+
+        LexicalUnit lu = condPrimeTree.children.get(0).label.getTerminal();
         if (lu == LexicalUnit.OR) {
-            String leftVar = children.get(1).conj();
-            String rightVar = children.get(2).condPrime();
-            String resultVar = "%" + ++varCounter;
-            String code = "  " + resultVar + "= or i1 " + leftVar + ", " + rightVar + "\n";
+            String rightVar = condPrimeTree.children.get(1).conj();
+            String code = "  %" + ++varCounter + "= or i1 " + leftVar + ", " + rightVar + "\n";
             codeToOut.append(code);
-            return resultVar;
+            if (condPrimeTree.children.size() > 2) {
+                return condPrime("%" + varCounter, condPrimeTree.children.get(2));
+            } else {
+                return "%" + varCounter;
+            }
         }
         return "%" + varCounter;
     }

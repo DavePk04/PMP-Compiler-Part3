@@ -527,28 +527,30 @@ public class ParseTree {
 
     public String conj() {
         // [32] <Conj>  ->  <SimpleCond> <Conj'>
-        System.out.println("conj: ");
         String var = children.get(0).simpleCond();
-        System.out.println("var: " + var);
-        children.get(1).conjPrime();
-        System.out.println("var2: " + var);
-        return var;
+        if (children.size() > 1) {
+            return conjPrime(var, children.get(1));
+        } else {
+            return var;
+        }
     }
 
-    public String conjPrime() {
+    public String conjPrime(String leftVar, ParseTree conjPrimeTree) {
         // [33] <Conj'>  ->  and <SimpleCond> <Conj'>
         // [34] <Conj'>  ->  EPSILON
 
-        LexicalUnit lu = children.get(0).label.getTerminal();
-        String var = null;
+        LexicalUnit lu = conjPrimeTree.children.get(0).label.getTerminal();
         if (lu == LexicalUnit.AND) {
-            String leftVar = children.get(1).simpleCond();
-            String rightVar = children.get(2).conjPrime();
+            String rightVar = conjPrimeTree.children.get(1).simpleCond();
             String code = "  %" + ++varCounter + "= and i1 " + leftVar + ", " + rightVar + "\n";
             codeToOut.append(code);
-            var = "%" + varCounter;
+            if (conjPrimeTree.children.size() > 2) {
+                return conjPrime("%" + varCounter, conjPrimeTree.children.get(2));
+            } else {
+                return "%" + varCounter;
+            }
         }
-        return var;
+        return "%" + varCounter;
     }
 
     public String simpleCond() {

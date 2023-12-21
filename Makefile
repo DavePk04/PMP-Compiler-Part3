@@ -18,9 +18,9 @@ testing:
 #	java -jar dist/part2.jar -wt outputs/WhileMultipleParseTree.tex tests/03-WhileMultiple.pmp		# OK
 #	java -jar dist/part2.jar -wt outputs/WhileWrongParseTree.tex tests/03-WhileWrong.pmp
 #	java -jar dist/part2.jar -wt outputs/PrintReadParseTree.tex tests/04-PrintRead.pmp              # OK
-	java -jar dist/part2.jar -wt outputs/BeginEndParseTree.tex tests/05-BeginEnd.pmp
-#	java -jar dist/part2.jar -wt outputs/BeginEndEmptyParseTree.tex tests/05-BeginEndEmpty.pmp								# OK
-#	java -jar dist/part2.jar -wt outputs/BeginEndMultipleParseTree.tex tests/05-BeginEndMultiple.pmp  					 	# OK, but not sure
+#	java -jar dist/part2.jar -wt outputs/BeginEndParseTree.tex tests/05-BeginEnd.pmp				# OK
+#	java -jar dist/part2.jar -wt outputs/BeginEndEmptyParseTree.tex tests/05-BeginEndEmpty.pmp		# OK
+	java -jar dist/part2.jar -wt outputs/BeginEndMultipleParseTree.tex tests/05-BeginEndMultiple.pmp  					 	# OK, but not sure
 #	java -jar dist/part2.jar -wt outputs/ExprArithBigParseTree.tex tests/06-ExprArithBig.pmp
 #	java -jar dist/part2.jar -wt outputs/ExprArithPrioritiesParseTree.tex tests/06-ExprArithPriorities.pmp
 #	java -jar dist/part2.jar -wt outputs/ExprArithWithMinusParseTree.tex tests/06-ExprArithWithMinus.pmp

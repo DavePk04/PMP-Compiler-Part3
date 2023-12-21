@@ -212,8 +212,8 @@ public class ParseTree {
         children.get(1).code();
         codeToOut.append("ret i32 0\n}\n");
 
-        if (read) {codeToOut.append(get_print());}
-        if (print) {codeToOut.append(get_read());}
+        if (read) {codeToOut.append(get_read());}
+        if (print) {codeToOut.append(get_print());}
     }
 
     public void code() {

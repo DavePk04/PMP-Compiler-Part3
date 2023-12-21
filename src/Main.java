@@ -73,9 +73,37 @@ public class Main{
                 String inputFileName = args[args.length-1];
                 String fileNameWithoutPath = inputFileName.substring(inputFileName.lastIndexOf('/') + 1);
                 String fileNameWithoutExtension = fileNameWithoutPath.substring(0, fileNameWithoutPath.lastIndexOf('.'));
-//                System.out.println(fileNameWithoutExtension);
+                System.out.println(fileNameWithoutExtension);
                 System.out.println(parseTree.getCodeToOut(
                         ));
+                String codeToOut = String.valueOf(parseTree.getCodeToOut());
+                StringBuilder codeToOutRes = new StringBuilder(codeToOut);
+                // create a directory named results if it does not exist
+                // in this directory, we will put the output files : fileNameWithoutExtension.ll
+                // write the contents of codeToOut to the output file
+                File directory = new File("results");
+                if (! directory.exists()){
+                    directory.mkdir();
+                }
+                String outputFileName = "results/" + fileNameWithoutExtension + ".ll";
+                try {
+                    // Create a new file
+                    File file = new File(outputFileName);
+
+                    // Create a file writer object
+                    FileWriter fileWriter = new FileWriter(file);
+
+                    // Create a buffered writer object
+                    BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+
+                    // Write the contents of codeToOut to the output file
+                    bufferedWriter.write(codeToOutRes.toString());
+
+                    // Close the buffered writer object
+                    bufferedWriter.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 //                String codeToOut = String.valueOf(parseTree.getCodeToOut());
 //                // Construct the output file name with .txt extension
 //                String outputFileName = "results/" + fileNameWithoutExtension + ".txt";
@@ -111,7 +139,6 @@ public class Main{
 //                } else {
 //                    System.out.println("The program is incorrect");
 //                }
-                System.out.println("---------------------------------");
 
 
                 if (writeTree) {tex=parseTree.toLaTeX();};

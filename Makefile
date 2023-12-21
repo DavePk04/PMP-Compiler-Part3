@@ -9,9 +9,9 @@ build: jflex
 	jar cfe dist/part2.jar Main -C more .
 testing:
 #	java -jar dist/part2.jar -wt outputs/AssignParseTree.tex tests/01-Assign.pmp											# OK
-	java -jar dist/part2.jar -wt outputs/EuclidParseTree.tex tests/00-euclid.pmp
+#	java -jar dist/part2.jar -wt outputs/EuclidParseTree.tex tests/00-euclid.pmp											# OK
 #	java -jar dist/part2.jar -wt outputs/IfThen1ParseTree.tex tests/02-IfThen1.pmp
-#	java -jar dist/part2.jar -wt outputs/IfThen2ParseTree.tex tests/02-IfThen2.pmp											# OK
+	java -jar dist/part2.jar -wt outputs/IfThen2ParseTree.tex tests/02-IfThen2.pmp											# OK
 #	java -jar dist/part2.jar -wt outputs/IfThenElseParseTree.tex tests/02-IfThenElse.pmp									# OK
 #	java -jar dist/part2.jar -wt outputs/IfThenWrongParseTree.tex tests/02-IfThenWrong.pmp
 #	java -jar dist/part2.jar -wt outputs/WhileParseTree.tex tests/03-While.pmp												# OK

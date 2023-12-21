@@ -450,8 +450,9 @@ public class ParseTree {
 
     public void ifExpr() {
         // [26] <If>  -> if <Cond> then <Instruction> else <IfTail>
+        System.out.println("ifExpr: ");
         String var = children.get(1).cond();
-        String code = "  br i1" + var + ", label %if" + ifCounter; // conditional jump to if or else
+        String code = "  br i1 " + var + ", label %if" + ifCounter; // conditional jump to if or else
         if (children.get(3).label.isNonTerminal()) {
             code += ", label %Else" + ifCounter + "\n";
         } else {
@@ -478,6 +479,7 @@ public class ParseTree {
     public void ifTail() {
         // [27] <IfTail>  ->  <Instruction>
         // [28] <IfTail>  ->  EPSILON
+        System.out.println("ifTail: ");
         if (children.get(0).label.isNonTerminal()) {
             children.get(0).instruction();
         }
@@ -485,6 +487,7 @@ public class ParseTree {
 
     public String cond() {
         // [29] <Cond>  ->  <Conj> <Cond'>
+        System.out.println("cond: " );
         children.get(0).conj();
         String var = children.get(1).condPrime();
         return var;
@@ -493,24 +496,26 @@ public class ParseTree {
     public String condPrime() {
         // [30] <Cond'>  ->  or <Conj> <Cond'>
         // [31] <Cond'>  ->  EPSILON
-
+        System.out.println("condPrime: ");
         LexicalUnit lu = children.get(0).label.getTerminal();
-        String var = null;
         if (lu == LexicalUnit.OR) {
             String leftVar = children.get(1).conj();
             String rightVar = children.get(2).condPrime();
-            var = "%" + varCounter;
-            String code = " " + var + "= or i1 " + leftVar + ", " + rightVar + "\n";
+            String resultVar = "%" + ++varCounter;
+            String code = "  " + resultVar + "= or i1 " + leftVar + ", " + rightVar + "\n";
             codeToOut.append(code);
-            children.get(2).condPrime();
+            return resultVar;
         }
-        return var;
+        return "%" + varCounter;
     }
 
     public String conj() {
         // [32] <Conj>  ->  <SimpleCond> <Conj'>
+        System.out.println("conj: ");
         String var = children.get(0).simpleCond();
+        System.out.println("var: " + var);
         children.get(1).conjPrime();
+        System.out.println("var2: " + var);
         return var;
     }
 

@@ -1,37 +1,22 @@
+JAR = dist/part3.jar
+SRC_DIR = src/
+BUILD_DIR = more/
+TESTS_DIR = tests/
+JAVA_FILES = $(wildcard $(SRC_DIR)*.java)
+TEST_FILES = $(wildcard $(TESTS_DIR)*.pmp)
+
+.PHONY: default jflex build testing all
 
 default: build
 
 jflex:
-	jflex src/LexicalAnalyzer.flex
+	jflex $(SRC_DIR)LexicalAnalyzer.flex
 
 build: jflex
-	javac -d more -cp src/ src/Main.java
-	jar cfe dist/part2.jar Main -C more .
-testing:
-#	java -jar dist/part2.jar -wt outputs/AssignParseTree.tex tests/01-Assign.pmp					# OK
-#	java -jar dist/part2.jar -wt outputs/EuclidParseTree.tex tests/00-euclid.pmp				    # OK
-#	java -jar dist/part2.jar -wt outputs/IfThen1ParseTree.tex tests/02-IfThen1.pmp
-#	java -jar dist/part2.jar -wt outputs/IfThen2ParseTree.tex tests/02-IfThen2.pmp					# OK
-#	java -jar dist/part2.jar -wt outputs/IfThenElseParseTree.tex tests/02-IfThenElse.pmp			# OK
-#	java -jar dist/part2.jar -wt outputs/IfThenWrongParseTree.tex tests/02-IfThenWrong.pmp
-#	java -jar dist/part2.jar -wt outputs/WhileParseTree.tex tests/03-While.pmp						# OK
-#	java -jar dist/part2.jar -wt outputs/WhileMultipleParseTree.tex tests/03-WhileMultiple.pmp		# OK
-#	java -jar dist/part2.jar -wt outputs/WhileWrongParseTree.tex tests/03-WhileWrong.pmp
-#	java -jar dist/part2.jar -wt outputs/PrintReadParseTree.tex tests/04-PrintRead.pmp              # OK
-#	java -jar dist/part2.jar -wt outputs/BeginEndParseTree.tex tests/05-BeginEnd.pmp				# OK
-#	java -jar dist/part2.jar -wt outputs/BeginEndEmptyParseTree.tex tests/05-BeginEndEmpty.pmp		# OK
-#	java -jar dist/part2.jar -wt outputs/BeginEndMultipleParseTree.tex tests/05-BeginEndMultiple.pmp # OK
-#	java -jar dist/part2.jar -wt outputs/ExprArithBigParseTree.tex tests/06-ExprArithBig.pmp		# OK
-#	java -jar dist/part2.jar -wt outputs/ExprArithPrioritiesParseTree.tex tests/06-ExprArithPriorities.pmp # OK
-#	java -jar dist/part2.jar -wt outputs/ExprArithWithMinusParseTree.tex tests/06-ExprArithWithMinus.pmp  # OK (--3 = -1*-1*3 ?)
-#	java -jar dist/part2.jar -wt outputs/ExprArithWithParenthesesParseTree.tex tests/06-ExprArithWithParentheses.pmp # OK
-#	java -jar dist/part2.jar -wt outputs/ExprArithWrongParseTree.tex tests/06-ExprArithWrong.pmp                    # OK
-#	java -jar dist/part2.jar -wt outputs/CondBigParseTree.tex tests/07-CondBig.pmp								# OK
-#	java -jar dist/part2.jar -wt outputs/CondPrioritiesParseTree.tex tests/07-CondPriorities.pmp # OK
-#	java -jar dist/part2.jar -wt outputs/CondWithBracketsParseTree.tex tests/07-CondWithBrackets.pmp 				# OK
-#	java -jar dist/part2.jar -wt outputs/CondWrongParseTree.tex tests/07-CondWrong.pmp
-	java -jar dist/part2.jar -wt outputs/factorialParseTree.tex tests/08-factorial.pmp
+	javac -d $(BUILD_DIR) -cp $(SRC_DIR) $(JAVA_FILES)
+	jar cfe $(JAR) Main -C $(BUILD_DIR) .
 
-
+testing: $(TEST_FILES)
+	$(foreach file,$(TEST_FILES),java -jar $(JAR) $(file);)
 
 all: build testing

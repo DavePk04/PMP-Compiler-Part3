@@ -28,9 +28,9 @@ testing:
 #	java -jar dist/part2.jar -wt outputs/ExprArithWrongParseTree.tex tests/06-ExprArithWrong.pmp                    # OK
 #	java -jar dist/part2.jar -wt outputs/CondBigParseTree.tex tests/07-CondBig.pmp								# OK
 #	java -jar dist/part2.jar -wt outputs/CondPrioritiesParseTree.tex tests/07-CondPriorities.pmp # OK
-	java -jar dist/part2.jar -wt outputs/CondWithBracketsParseTree.tex tests/07-CondWithBrackets.pmp 				# OK
+#	java -jar dist/part2.jar -wt outputs/CondWithBracketsParseTree.tex tests/07-CondWithBrackets.pmp 				# OK
 #	java -jar dist/part2.jar -wt outputs/CondWrongParseTree.tex tests/07-CondWrong.pmp
-#	java -jar dist/part2.jar -wt outputs/factorialParseTree.tex tests/08-factorial.pmp
+	java -jar dist/part2.jar -wt outputs/factorialParseTree.tex tests/08-factorial.pmp
 
 
 

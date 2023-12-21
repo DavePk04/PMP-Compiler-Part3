@@ -273,96 +273,146 @@ public class ParseTree {
             children.get(1).instructionList();
             return;
         }
-        System.out.println(children.get(0).label.getValue().toString());
 
         throw new RuntimeException("Error in instruction");
     }
 
-    public void assignExpr() {
+    public String assignExpr() {
         // [13] <Assign>  ->  [Varname] := <ExprArith>
 
+        String varName = children.get(0).label.getValue().toString();
         String code;
-        if (!varStored.contains(children.get(0).label.getValue())) {
-            // if the variable is not stored yet
-            // Memory allocation of current variable
-            code = "  %" + children.get(0).label.getValue() + "= alloca i32\n";
+
+        // Allocation de mémoire pour la variable si elle n'a pas été allouée auparavant
+        if (!varStored.contains(varName)) {
+            code = "  %" + varName + "= alloca i32\n";
             codeToOut.append(code);
-            varStored.add(children.get(0).label.getValue().toString());
+            varStored.add(varName);
         }
-        children.get(2).exprArith();
-        code = "  store i32 %" + varCounter + ", i32* %" + children.get(0).label.getValue() + "\n";
+
+        // Évaluer l'expression arithmétique (côté droit de l'affectation)
+        String exprResultVar = children.get(2).exprArith();
+
+        // Stocker le résultat dans la variable (côté gauche de l'affectation)
+        code = "  store i32 " + exprResultVar + ", i32* %" + varName + "\n";
         codeToOut.append(code);
-    }
 
-    public void exprArith() {
+        return null;
+    }
+    public String exprArith() {
         // [14] <ExprArith>  ->  <Prod> <ExprArith'>
-        children.get(0).prod();
-        children.get(1).exprArithPrime();
+        String var1 = children.get(0).prod();
+        if (children.size() > 1) {
+            return exprArithPrime(var1, children.get(1));
+        } else {
+            return var1;
+        }
     }
 
-    public void exprArithPrime() {
+
+//    public void exprArithPrime() {
+//        // [15] <ExprArith'>  ->  + <Prod> <ExprArith'>
+//        // [16] <ExprArith'>  ->  - <Prod> <ExprArith'>
+//        // [17] <ExprArith'>  ->  EPSILON
+//
+//        LexicalUnit lu = children.get(0).label.getTerminal();
+//        switch (lu) {
+//            case PLUS -> {
+//                String var1 = children.get(1).prod();
+//                String rightVar = "%" + (varCounter-1);
+//                String resVar = "%" + ++varCounter;
+//                String code = "  " + resVar + "= add i32 " + var1 + ", " + rightVar + "\n";
+//                codeToOut.append(code);
+//                children.get(2).exprArithPrime();
+//            }
+//            case MINUS -> {
+//                String var1 = children.get(1).prod();
+//                String rightVar = "%" + (varCounter-1);
+//                String restVar = "%" + ++varCounter;
+//                String code = "  " + restVar + "= sub i32 " + var1 + ", " + rightVar + "\n";
+//                codeToOut.append(code);
+//                children.get(2).exprArithPrime();
+//            }
+//        }
+//        System.out.println("Error in exprArithPrime");
+//        System.out.println(lu);
+//    }
+
+    public String exprArithPrime(String leftVar, ParseTree exprArithPrimeTree) {
         // [15] <ExprArith'>  ->  + <Prod> <ExprArith'>
         // [16] <ExprArith'>  ->  - <Prod> <ExprArith'>
         // [17] <ExprArith'>  ->  EPSILON
-
-        LexicalUnit lu = children.get(0).label.getTerminal();
+        LexicalUnit lu = exprArithPrimeTree.children.get(0).label.getTerminal();
         switch (lu) {
             case PLUS -> {
-                children.get(1).prod();
-                String leftVar = "%" + (varCounter-1);
-                String rightVar = "%" + varCounter;
-                children.get(2).exprArithPrime();
-                String resVar = "%" + ++varCounter;
-                String code = "  " + resVar + "= add i32 " + leftVar + ", " + rightVar + "\n";
+                String rightVar = exprArithPrimeTree.children.get(1).prod();
+                String resultVar = "%" + ++varCounter;
+                String code = "  " + resultVar + "= add i32 " + leftVar + ", " + rightVar + "\n";
                 codeToOut.append(code);
+                if (exprArithPrimeTree.children.size() > 2) {
+                    return exprArithPrime(resultVar, exprArithPrimeTree.children.get(2));
+                } else {
+                    return resultVar;
+                }
             }
             case MINUS -> {
-                children.get(1).prod();
-                String leftVar = "%" + (varCounter-1);
-                String rightVar = "%" + varCounter;
-                children.get(2).exprArithPrime();
-                String restVar = "%" + ++varCounter;
-                String code = "  " + restVar + "= sub i32 " + leftVar + ", " + rightVar + "\n";
+                String rightVar = exprArithPrimeTree.children.get(1).prod();
+                String resultVar = "%" + ++varCounter;
+                String code = "  " + resultVar + "= sub i32 " + leftVar + ", " + rightVar + "\n";
                 codeToOut.append(code);
+                if (exprArithPrimeTree.children.size() > 2) {
+                    return exprArithPrime(resultVar, exprArithPrimeTree.children.get(2));
+                } else {
+                    return resultVar;
+                }
             }
+            // Gérer d'autres cas si nécessaire
         }
+        // Retourner le résultat de la dernière opération effectuée
+        return leftVar;
     }
 
-    public void prod() {
+
+
+    public String prod() {
         // [18] <Prod>  ->  <Atom> <Prod'>
-        children.get(0).atom();
+        String ret = children.get(0).atom();
         children.get(1).prodPrime();
+        return ret;
     }
 
-    public void prodPrime() {
+    public String prodPrime() {
         // [19] <Prod'>  ->  * <Atom> <Prod'>
         // [20] <Prod'>  ->  / <Atom> <Prod'>
         // [21] <Prod'>  ->  EPSILON
         LexicalUnit lu = children.get(0).label.getTerminal();
         switch (lu) {
             case TIMES -> {
-                children.get(1).atom();
+                String var1 = children.get(1).atom();
                 String firstVar = "%" + (varCounter-1); // Première variable pour la multiplication
-                children.get(2).prodPrime();
+                String var2 = children.get(2).prodPrime();
                 String secondVar = "%" + varCounter; // Deuxième variable
                 String resultVar = "%" + ++varCounter; // Variable pour le résultat
-                String code = "  " + resultVar + "= mul i32 " + firstVar + " , " + secondVar + "\n";
+                String code = "  " + resultVar + "= mul i32 " + var1 + " , " + var2 + "\n";
                 codeToOut.append(code);
+                return resultVar;
             }
             case DIVIDE -> {
-                children.get(1).atom();
+                String var1 = children.get(1).atom();
                 String numeratorVar = "%" + (varCounter-1); // Numérateur
-                children.get(2).prodPrime();
+                String var2 = children.get(2).prodPrime();
                 String denominatorVar = "%" + varCounter; // Dénominateur
                 String resultVar = "%" + ++varCounter; // Variable pour le résultat
-                String code = "  " + resultVar + "= sdiv i32 " + numeratorVar + " , " + denominatorVar + "\n";
+                String code = "  " + resultVar + "= sdiv i32 " + var1 + " , " + var2 + "\n";
                 codeToOut.append(code);
+                return resultVar;
             }
         }
+        return null;
     }
 
 
-    public void atom() {
+    public String atom() {
         // [22] <Atom>  ->  - <Atom>
         // [23] <Atom>  ->  ( <ExprArith> )
         // [24] <Atom>  ->  [Varname]
@@ -374,6 +424,7 @@ public class ParseTree {
                 String nextVar = "%" + ++varCounter;
                 String code = "  " + nextVar + "= add i32 0 , " + children.get(0).label.getValue() + "\n";
                 codeToOut.append(code);
+                return nextVar;
             }
             case MINUS -> {
                 children.get(1).atom();
@@ -384,20 +435,23 @@ public class ParseTree {
                 codeToOut.append(code);
 //                code = "  %" + ++varCounter + "= mul i32 " + prevVar + " , " + nextVar + "\n";
 //                codeToOut.append(code);
+                return nextVar;
             }
             case VARNAME -> {
                 String code = "  " + "%" + ++varCounter + "= load i32, i32* " + "%" + children.get(0).label.getValue() + "\n";
                 codeToOut.append(code);
+                return "%" + varCounter;
             }
             case LPAREN -> children.get(1).exprArith();
         }
+        return null;
 
     }
 
     public void ifExpr() {
         // [26] <If>  -> if <Cond> then <Instruction> else <IfTail>
-        children.get(1).cond();
-        String code = "  br i1 %" + varCounter + ", label %if" + ifCounter; // conditional jump to if or else
+        String var = children.get(1).cond();
+        String code = "  br i1" + var + ", label %if" + ifCounter; // conditional jump to if or else
         if (children.get(3).label.isNonTerminal()) {
             code += ", label %Else" + ifCounter + "\n";
         } else {
@@ -429,65 +483,80 @@ public class ParseTree {
         }
     }
 
-    public void cond() {
+    public String cond() {
         // [29] <Cond>  ->  <Conj> <Cond'>
         children.get(0).conj();
-        children.get(1).condPrime();
+        String var = children.get(1).condPrime();
+        return var;
     }
 
-    public void condPrime() {
+    public String condPrime() {
         // [30] <Cond'>  ->  or <Conj> <Cond'>
         // [31] <Cond'>  ->  EPSILON
 
         LexicalUnit lu = children.get(0).label.getTerminal();
+        String var = null;
         if (lu == LexicalUnit.OR) {
-            children.get(1).conj();
-            String leftVar = "%" + (varCounter-1);
-            String rightVar = "%" + varCounter;
-            String code = "  %" + ++varCounter + "= or i1 " + leftVar + ", " + rightVar + "\n";
+            String leftVar = children.get(1).conj();
+            String rightVar = children.get(2).condPrime();
+            var = "%" + varCounter;
+            String code = " " + var + "= or i1 " + leftVar + ", " + rightVar + "\n";
             codeToOut.append(code);
             children.get(2).condPrime();
         }
+        return var;
     }
 
-    public void conj() {
+    public String conj() {
         // [32] <Conj>  ->  <SimpleCond> <Conj'>
-        children.get(0).simpleCond();
+        String var = children.get(0).simpleCond();
         children.get(1).conjPrime();
+        return var;
     }
 
-    public void conjPrime() {
+    public String conjPrime() {
         // [33] <Conj'>  ->  and <SimpleCond> <Conj'>
         // [34] <Conj'>  ->  EPSILON
 
         LexicalUnit lu = children.get(0).label.getTerminal();
+        String var = null;
         if (lu == LexicalUnit.AND) {
-            children.get(1).simpleCond();
-            String leftVar = "%" + (varCounter-1);
-            String rightVar = "%" + varCounter;
+            String leftVar = children.get(1).simpleCond();
+            String rightVar = children.get(2).conjPrime();
             String code = "  %" + ++varCounter + "= and i1 " + leftVar + ", " + rightVar + "\n";
             codeToOut.append(code);
-            children.get(2).conjPrime();
+            var = "%" + varCounter;
         }
+        return var;
     }
 
-    public void simpleCond() {
+    public String simpleCond() {
         // [35] <SimpleCond>  ->  {<Cond>}
         // [36] <SimpleCond>  ->  <ExprArith> <Comp> <ExprArith>
 
         LexicalUnit lu = children.get(0).label.getTerminal();
+        String var = null;
+
         if (lu == LexicalUnit.LBRACK) {
-            children.get(1).cond();
+            // Condition encapsulée
+            var = children.get(1).cond();  // Capturer le résultat de la condition
         } else {
-            children.get(0).exprArith();
-            String leftVar = "%" + varCounter;
-            String rightVar = "%" + (varCounter+1);
-            String comp = children.get(1).compOp();
-            children.get(2).exprArith();
-            String code = "  %" + ++varCounter + "= icmp " + comp + " i32 " + leftVar + ", " + rightVar + "\n";
+            // Comparaison arithmétique
+            String leftVar = children.get(0).exprArith();  // Évaluer la première expression arithmétique
+            String comp = children.get(1).compOp();        // Obtenir l'opérateur de comparaison
+            String rightVar = children.get(2).exprArith(); // Évaluer la deuxième expression arithmétique
+            System.out.println("leftVar: " + leftVar + " comp: " + comp + " rightVar: " + rightVar);
+
+            // Générer le code de comparaison
+            String resultVar = "%" + ++varCounter;
+            String code = "  " + resultVar + "= icmp " + comp + " i32 " + leftVar + ", " + rightVar + "\n";
             codeToOut.append(code);
+            var = resultVar;
         }
+
+        return var;
     }
+
 
     public String compOp() {
         // [37] <Comp>  ->  =
@@ -518,15 +587,16 @@ public class ParseTree {
     }
 
 
-    public void printExpr() {
+    public String printExpr() {
         // [40] <Print>  ->  print([VarName])
         String code = "  " + "%" + ++varCounter + "= load i32, i32* %" + children.get(2).label.getValue().toString() + "\n"
                 + "  call void @println(i32 " + "%" + varCounter + ")\n";
         codeToOut.append(code);
         print = true;
+        return "%" + varCounter;
     }
 
-    public void readExpr() {
+    public String readExpr() {
         String code;
         if (!varStored.contains(children.get(2).label.getValue())){
             code = "  %" + children.get(2).label.getValue() + "= alloca i32\n";
@@ -537,6 +607,7 @@ public class ParseTree {
                 "  store i32 " + "%" + varCounter + ", i32* %" + children.get(2).label.getValue() + "\n";
         codeToOut.append(code);
         read = true;
+        return "%" + varCounter;
     }
 
     private static String get_print(){

@@ -14,8 +14,8 @@ testing:
 #	java -jar dist/part2.jar -wt outputs/IfThen2ParseTree.tex tests/02-IfThen2.pmp					# OK
 #	java -jar dist/part2.jar -wt outputs/IfThenElseParseTree.tex tests/02-IfThenElse.pmp			# OK
 #	java -jar dist/part2.jar -wt outputs/IfThenWrongParseTree.tex tests/02-IfThenWrong.pmp
-	java -jar dist/part2.jar -wt outputs/WhileParseTree.tex tests/03-While.pmp												# OK
-#	java -jar dist/part2.jar -wt outputs/WhileMultipleParseTree.tex tests/03-WhileMultiple.pmp								# OK
+#	java -jar dist/part2.jar -wt outputs/WhileParseTree.tex tests/03-While.pmp						# OK
+	java -jar dist/part2.jar -wt outputs/WhileMultipleParseTree.tex tests/03-WhileMultiple.pmp								# OK
 #	java -jar dist/part2.jar -wt outputs/WhileWrongParseTree.tex tests/03-WhileWrong.pmp
 #	java -jar dist/part2.jar -wt outputs/PrintReadParseTree.tex tests/04-PrintRead.pmp                                  	# OK
 #	java -jar dist/part2.jar -wt outputs/BeginEndParseTree.tex tests/05-BeginEnd.pmp

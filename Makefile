@@ -15,6 +15,7 @@ jflex:
 build: jflex
 	javac -d $(BUILD_DIR) -cp $(SRC_DIR) $(JAVA_FILES)
 	jar cfe $(JAR) Main -C $(BUILD_DIR) .
+	javadoc -private src/*.java -d doc/javadoc 2> /tmp/javadoc-warnings.txt
 
 testing: $(TEST_FILES)
 	$(foreach file,$(TEST_FILES),java -jar $(JAR) $(file);)
